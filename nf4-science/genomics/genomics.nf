@@ -2,6 +2,7 @@
 
 // Module INCLUDE statements
 include { SAMTOOLS_INDEX } from './modules/samtools_index.nf'
+include { SAMTOOLS_FLAGSTAT } from './modules/samtools_flagstat.nf'
 include { GATK_HAPLOTYPECALLER } from './modules/gatk_haplotypecaller.nf'
 include { GATK_JOINTGENOTYPING } from './modules/gatk_jointgenotyping.nf'
 
@@ -48,6 +49,9 @@ workflow {
         intervals_file
     )
 
+    // Generate alignment statistics for each indexed BAM file
+    SAMTOOLS_FLAGSTAT(SAMTOOLS_INDEX.out)
+
     // Collect variant calling outputs across samples
     all_gvcfs_ch = GATK_HAPLOTYPECALLER.out.vcf.collect()
     all_idxs_ch = GATK_HAPLOTYPECALLER.out.idx.collect()
@@ -69,6 +73,7 @@ workflow {
     gvcf_idx = GATK_HAPLOTYPECALLER.out.idx
     joint_vcf = GATK_JOINTGENOTYPING.out.vcf
     joint_vcf_idx = GATK_JOINTGENOTYPING.out.idx
+    flagstat = SAMTOOLS_FLAGSTAT.out
 }
 
 output {
@@ -86,5 +91,8 @@ output {
     }
     joint_vcf_idx {
         path '.'
+    }
+    flagstat {
+        path 'stats'
     }
 }
